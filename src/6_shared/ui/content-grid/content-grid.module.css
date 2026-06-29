@@ -1,0 +1,93 @@
+.root {
+	--content-grid-scrollbar-gutter: 8px;
+	--content-grid-scrollbar-size: 4px;
+
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	width: 100%;
+	height: 100%;
+	max-height: 100vh;
+	min-width: 0;
+	gap: 16px;
+
+	& .header,
+	& .footer,
+	& .body,
+	& .bodyScrollable {
+		min-width: 0;
+	}
+
+	& .header {
+		width: 100%;
+		overflow: hidden;
+	}
+
+	& .body,
+	& .bodyScrollable {
+		min-height: 0;
+	}
+
+	& .bodyScrollable {
+		width: calc(100% + var(--content-grid-scrollbar-gutter));
+		margin-inline-end: calc(-1 * var(--content-grid-scrollbar-gutter));
+	}
+
+	& .scroller {
+		width: 100%;
+		min-width: 0;
+		min-height: 0;
+	}
+
+	& .scrollerViewport {
+		padding-inline-end: var(--content-grid-scrollbar-gutter);
+		max-width: 100%;
+	}
+
+	& .scrollerScrollbar {
+		padding: 0;
+	}
+
+	& .footer {
+		width: 100%;
+		overflow: hidden;
+	}
+}
+
+/* только body */
+.root:has(.body, .bodyScrollable):not(:has(.header)):not(:has(.footer)) {
+	grid-template-rows: minmax(0, 1fr);
+}
+
+/* header + body */
+.root:has(.header):has(.body, .bodyScrollable):not(:has(.footer)) {
+	grid-template-rows: auto minmax(0, 1fr);
+}
+
+/* body + footer */
+.root:has(.body, .bodyScrollable):has(.footer):not(:has(.header)) {
+	grid-template-rows: minmax(0, 1fr) auto;
+}
+
+/* header + body + footer */
+.root:has(.header):has(.body, .bodyScrollable):has(.footer) {
+	grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/* header + footer, без body */
+.root:has(.header):has(.footer):not(:has(.body)):not(:has(.bodyScrollable)) {
+	grid-template-rows: auto auto;
+}
+
+/* только header */
+.root:has(.header):not(:has(.body)):not(:has(.bodyScrollable)):not(
+		:has(.footer)
+	) {
+	grid-template-rows: auto;
+}
+
+/* только footer */
+.root:has(.footer):not(:has(.body)):not(:has(.bodyScrollable)):not(
+		:has(.header)
+	) {
+	grid-template-rows: auto;
+}

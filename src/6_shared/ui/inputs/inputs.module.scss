@@ -1,0 +1,24 @@
+@use "@functions" as *;
+
+.label {
+	font-size: adapt(13, 15);
+	margin-bottom: adapt(4, 6);
+}
+
+.input {
+	font-size: adapt(14, 16);
+	border-radius: adapt(8, 12);
+}
+
+.error {
+	font-size: adapt(11, 13);
+}
+
+.description {
+	font-size: adapt(11, 13);
+	margin-top: adapt(4, 6);
+}
+
+.required {
+	color: var(--mantine-color-red-6);
+}

@@ -1,0 +1,40 @@
+@function adapt($minValue, $maxValue, $fromWidth: 480, $toWidth: 1440) {
+	$slope: ($maxValue - $minValue) / ($toWidth - $fromWidth);
+	$y-intercept: $minValue - $slope * $fromWidth;
+	$result: clamp(
+		#{$minValue / 16}rem,
+		#{$y-intercept / 16}rem + #{$slope * 100}vw,
+		#{$maxValue / 16}rem
+	);
+
+	@return $result;
+}
+
+@mixin flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+@mixin cover {
+	position: absolute;
+	inset: 0;
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover;
+}
+
+@mixin contain {
+	position: absolute;
+	inset: 0;
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: contain;
+}
+
+@mixin line-clamp($lines-number: 3) {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: $lines-number;
+}
