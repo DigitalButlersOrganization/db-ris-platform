@@ -139,7 +139,9 @@ NEXT_PUBLIC_API_URL=https://api.example.com
 - [ ] Импорты через `@pages/*`, `@widgets/*`, `@features/*`, `@entities/*`, `@shared/*`
 - [ ] Query/mutation hooks, не raw fetch
 - [ ] `api` / `apiPrivate` + `apiRoute()` + keys из `query-key.ts`
+- [ ] Mutation: invalidate всех связанных query keys; простые изменения — optimistic update ([tanstack-query.md](./tanstack-query.md))
 - [ ] Loading/error/empty states
+- [ ] Ошибки API — глобально через `queryClient`; success toast только для значимых mutations ([notifications.md](./notifications.md))
 - [ ] `"use client"` только где нужно
 - [ ] Нет unrelated changes
 - [ ] `pnpm lint` проходит

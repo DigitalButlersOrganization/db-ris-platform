@@ -65,11 +65,11 @@ import { Button } from "@mantine/core";
 | ----------------------- | ---------------------------------------------------- | ---------------------- |
 | `shared/ui/**`          | UI-компоненты Mantine                                | здесь живут обёртки    |
 | `shared/theme/**`       | `createTheme`, типы theme                            | конфигурация темы      |
-| `src/app/providers.tsx` | `MantineProvider`, `ModalsProvider`, `Notifications` | root providers         |
-| Любой файл              | `@mantine/hooks`                                     | хуки, не UI-компоненты |
-| Любой файл              | `@mantine/form` (`useForm`)                          | form logic, не UI      |
-| Любой файл              | `notifications` из `@mantine/notifications`          | imperative API         |
-| Любой файл              | `modals` из `@mantine/modals`                        | imperative API         |
+| `src/app/providers.tsx` | `MantineProvider`, `ModalsProvider`                    | root providers         |
+| Любой файл              | `@mantine/hooks`                                       | хуки, не UI-компоненты |
+| Любой файл              | `@mantine/form` (`useForm`)                            | form logic, не UI      |
+| `shared/lib/notify.ts`  | `notifications` из `@mantine/notifications`            | единственная точка API |
+| Любой файл              | `modals` из `@mantine/modals`                          | imperative API         |
 
 CSS-импорты Mantine (`@mantine/core/styles.css`, …) — только в `providers.tsx`.
 
@@ -114,7 +114,7 @@ CSS-импорты Mantine (`@mantine/core/styles.css`, …) — только в
 @mantine/dates       → только через shared/ui обёртки
 @mantine/hooks       → напрямую (хуки)
 @mantine/form        → напрямую (useForm)
-@mantine/notifications → notifications.show() напрямую
+@mantine/notifications → только через shared/lib (notify) + shared/ui (AppNotifications)
 @mantine/modals      → modals.open*() напрямую
 ```
 
@@ -154,19 +154,18 @@ CSS variables для бренда — в `src/app/globals.css` (Tailwind `@theme
 
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
+import { AppNotifications } from "@shared/ui";
 import { mantineTheme } from "@shared/theme";
 
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "@mantine/notifications/styles.css";
 
 export function Providers({ children }: { children: React.ReactNode }) {
 	return (
 		<MantineProvider theme={mantineTheme}>
 			<ModalsProvider>
-				<Notifications position="top-right" />
 				{children}
+				<AppNotifications />
 			</ModalsProvider>
 		</MantineProvider>
 	);
@@ -438,15 +437,19 @@ return (
 
 ## Notifications
 
-```tsx
-import { notifications } from "@mantine/notifications";
+Полная спека: [notifications.md](./notifications.md).
 
-notifications.show({
-	title: "Врач назначен",
-	message: "Пациент направлен к врачу",
-	color: "green",
-});
+```tsx
+import { getErrorMessage, notify } from "@shared/lib";
+
+// success — только для значимых мутаций
+notify.success("Врач назначен");
+
+// error — вручную только вне query/mutation; API-ошибки — глобально в queryClient
+notify.error(getErrorMessage(error));
 ```
+
+Контейнер `<AppNotifications />` — в `providers.tsx`, не вызывать `notifications.show()` напрямую.
 
 ## Modals
 

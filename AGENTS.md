@@ -56,6 +56,7 @@
 | FSD-lite + Next.js | [docs/agents/architecture-fsd.md](docs/agents/architecture-fsd.md) |
 | Стек и зависимости | [docs/agents/stack.md](docs/agents/stack.md) |
 | TanStack Query | [docs/agents/tanstack-query.md](docs/agents/tanstack-query.md) |
+| Notifications | [docs/agents/notifications.md](docs/agents/notifications.md) |
 | API-слой (axios) | [docs/agents/api-layer.md](docs/agents/api-layer.md) |
 | Типы и Zod | [docs/agents/types-and-zod.md](docs/agents/types-and-zod.md) |
 | UI / Mantine | [docs/agents/ui-mantine.md](docs/agents/ui-mantine.md) |
@@ -66,9 +67,10 @@
 ## Быстрые правила для агентов
 
 1. **Только фронт.** Backend API не трогаем; используем `NEXT_PUBLIC_API_URL`.
-2. **Все backend-данные через TanStack Query.** Не `useEffect + fetch`. Каждый запрос — хук в `5_entities/{entity}/`.
+2. **Все backend-данные через TanStack Query.** Не `useEffect + fetch`. Каждый запрос — хук в `5_entities/{entity}/`. Простые mutations (toggle, rename, status) — optimistic update; после mutation — invalidate связанных keys. См. [tanstack-query.md](docs/agents/tanstack-query.md).
 3. **HTTP только через `api` / `apiPrivate`.** URL — через `apiRoute()`, ключи — из `query-key.ts`. См. [api-layer.md](docs/agents/api-layer.md).
 4. **Mantine UI только через `@shared/ui`.** Прямой импорт компонентов из `@mantine/*` запрещён — см. [ui-mantine.md](docs/agents/ui-mantine.md).
+   - Уведомления — только `notify` из `@shared/lib`; контейнер `<AppNotifications />` в `providers.tsx`. См. [notifications.md](docs/agents/notifications.md).
    - Нативный скролл отключён (приложение залочено в `100vh`). Высокий/скроллируемый контент — через `ContentGrid` (`@shared/ui`). Модалка — **всегда** `ContentGrid` (контент в `Body`, кнопки в `Footer`).
    - Вертикальная вёрстка — через `Stack` (`@shared/ui`), gap через clamp. См. [styling.md](docs/agents/styling.md).
    - Адаптивные размеры — через `adapt()` / `getJsClamp()` (480→1440). Media queries только для layout, не для размеров.

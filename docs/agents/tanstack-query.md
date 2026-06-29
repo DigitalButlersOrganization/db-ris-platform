@@ -123,18 +123,148 @@ export function useCreatePatient() {
 
 Подробнее: [api-layer.md](./api-layer.md).
 
-## Invalidation rules
+## Invalidation после mutations
+
+**Обязательно** инвалидировать все связанные query keys в `onSuccess` (или `onSettled` после optimistic update). Если мутация меняет сущность — подумай, какие экраны/списки/детали от неё зависят.
 
 | Mutation | Invalidate |
 |----------|------------|
 | `useCreatePatient` | `patientListQueryKey()` |
-| `useChangeAppointmentStatus` | `appointmentQueryKey(id)`, списки |
+| `useChangePatientStatus` | `patientQueryKey(id)`, `patientListQueryKey()` |
+| `useAssignDoctor` | `appointmentQueryKey(id)`, очередь ресепшена, worklist врача |
 
-Инвалидируй **точечно**, не `queryClient.clear()`.
+### Чеклист для агента
 
-## Error handling
+После каждой mutation в `onSuccess` / `onSettled`:
 
-В UI: `isError`, `error` из query/mutation → показываем `ErrorState` из `6_shared/ui`.
+1. **Деталь** — `*QueryKey(id)` изменённой сущности
+2. **Списки** — все list-ключи, где эта сущность видна
+3. **Смежные сущности** — если мутация затрагивает связанные данные (пациент + запись, оплата + статус записи)
+4. **Счётчики / агрегаты** — если есть отдельные ключи
+
+Инвалидируй **точечно**, не `queryClient.clear()`. Пропуск связанного ключа — баг: UI покажет устаревшие данные.
+
+```ts
+onSuccess: (_, { patientId }) => {
+  queryClient.invalidateQueries({ queryKey: patientQueryKey(patientId) });
+  queryClient.invalidateQueries({ queryKey: patientListQueryKey() });
+},
+```
+
+## Optimistic updates
+
+Для **простых** мутаций — переключение свитчера, переименование, смена статуса, изменение одного поля — используй **optimistic update** через `onMutate`, а не жди ответа сервера.
+
+| Подходит для optimistic | Лучше без optimistic |
+|-------------------------|----------------------|
+| toggle / switch | create (новая сущность) |
+| rename / change field | delete |
+| change status | сложная форма с валидацией |
+| assign / unassign | payment / критичные операции |
+
+### Паттерн
+
+1. `onMutate` — отменить исходящие refetch, сохранить snapshot, обновить cache
+2. Вернуть **контекст** (snapshot) из `onMutate`
+3. `onError` — откатить cache из контекста
+4. `onSettled` — `invalidateQueries` по связанным ключам (сервер — source of truth)
+
+```ts
+// 5_entities/patients/use-change-patient-status.ts
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiPrivate, apiRoute, patientListQueryKey, patientQueryKey } from "@shared/api";
+import type { Patient } from "./types";
+
+type MutationContext = {
+  previousList?: Patient[];
+  previousDetail?: Patient;
+};
+
+export function useChangePatientStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ patientId, status }: { patientId: string; status: string }) =>
+      apiPrivate
+        .patch(apiRoute("PATIENT", "UPDATE"), { patientId, status })
+        .then((r) => r.data),
+
+    onMutate: async ({ patientId, status }) => {
+      await queryClient.cancelQueries({ queryKey: patientListQueryKey() });
+      await queryClient.cancelQueries({ queryKey: patientQueryKey(patientId) });
+
+      const previousList = queryClient.getQueryData<Patient[]>(patientListQueryKey());
+      const previousDetail = queryClient.getQueryData<Patient>(patientQueryKey(patientId));
+
+      queryClient.setQueryData<Patient[]>(patientListQueryKey(), (list) =>
+        list?.map((patient) =>
+          patient.id === patientId ? { ...patient, status } : patient,
+        ),
+      );
+
+      queryClient.setQueryData<Patient>(patientQueryKey(patientId), (patient) =>
+        patient ? { ...patient, status } : patient,
+      );
+
+      return { previousList, previousDetail } satisfies MutationContext;
+    },
+
+    onError: (_error, { patientId }, context) => {
+      if (context?.previousList) {
+        queryClient.setQueryData(patientListQueryKey(), context.previousList);
+      }
+      if (context?.previousDetail) {
+        queryClient.setQueryData(patientQueryKey(patientId), context.previousDetail);
+      }
+    },
+
+    onSettled: (_data, _error, { patientId }) => {
+      queryClient.invalidateQueries({ queryKey: patientListQueryKey() });
+      queryClient.invalidateQueries({ queryKey: patientQueryKey(patientId) });
+    },
+  });
+}
+```
+
+### Immer — нужен ли?
+
+**Нет, не стандартизируем.** Для типичных optimistic-мутаций (одно поле, статус, toggle) достаточно spread:
+
+```ts
+{ ...patient, status: newStatus }
+list?.map((item) => (item.id === id ? { ...item, field } : item))
+```
+
+Immer имеет смысл только если обновляешь **глубоко вложенные** структуры и spread становится нечитаемым. Тогда — точечно, по запросу, не как дефолт для всех mutations. Зависимость в проект **не добавляем** без явной необходимости.
+
+## HTTP-клиент
+
+Ошибки query/mutation показываются **глобально** через `QueryCache` / `MutationCache` в `query-client.ts` → `notify.error(getErrorMessage(error))`. Подробнее: [notifications.md](./notifications.md).
+
+В хуках **не дублировать** `onError` с `notify.error`.
+
+В UI параллельно обрабатываем состояния экрана: `isError` → `ErrorState` + retry (см. [coding-conventions.md](./coding-conventions.md)).
+
+### Success-уведомления в mutations
+
+Только для значимых изменений данных (create / update / delete / assign):
+
+```ts
+// 5_entities/patients/use-create-patient.ts
+import { notify } from "@shared/lib";
+
+return useMutation({
+  mutationFn: ...,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: patientListQueryKey() });
+    notify.success("Пациент создан");
+  },
+});
+```
+
+Фильтры, сортировка, refetch — без success toast.
 
 ## Polling
 
@@ -161,4 +291,9 @@ useQuery({ queryKey: ["patients", "list"], ... });
 
 // ❌ hardcoded URL
 api.get("/patient/list");
+
+// ❌ mutation без invalidate связанных keys
+onSuccess: () => { /* ничего */ }
+
+// ❌ ждать ответ сервера для простого toggle вместо optimistic update
 ```

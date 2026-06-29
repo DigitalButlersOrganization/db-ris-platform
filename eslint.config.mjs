@@ -64,6 +64,11 @@ const mantineUiRules = {
 					message:
 						"Import date components from @shared/ui, not @mantine/dates directly.",
 				},
+				{
+					name: "@mantine/notifications",
+					message:
+						"Use notify from @shared/lib and AppNotifications from @shared/ui, not @mantine/notifications directly.",
+				},
 			],
 		},
 	],
@@ -79,6 +84,7 @@ const eslintConfig = [
 		files: ["src/**/*.{ts,tsx}"],
 		ignores: [
 			"src/6_shared/ui/**",
+			"src/6_shared/lib/notify.ts",
 			"src/6_shared/theme/**",
 			"src/app/providers.tsx",
 		],
