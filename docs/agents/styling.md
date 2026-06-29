@@ -84,14 +84,17 @@ const fontSize = getJsClamp(14, 18); // clamp(0.875rem, …, 1.125rem)
 }
 ```
 
-## CSS Modules vs Tailwind
+## Только CSS Modules (Tailwind не используем)
+
+Tailwind из проекта **удалён**: utility-классы конфликтуют с кастомными `@shared/ui`-обёртками над Mantine (двойные источники размеров/отступов, дубли clamp-значений в arbitrary values). Единый источник стилей — SCSS Modules + `@functions`.
 
 | Инструмент | Когда |
 |------------|-------|
-| `.module.scss` + `@functions` | компонентные стили с fluid-размерами, миксинами |
-| Tailwind | layout utilities, one-off spacing, быстрые правки |
+| `.module.scss` + `@functions` | все компонентные стили: fluid-размеры, отступы, миксины |
+| `Stack` / `ContentGrid` (`@shared/ui`) | вертикальный layout, gap, скролл |
+| inline `style` + `getJsClamp()` | редкие one-off случаи, когда заводить модуль избыточно |
 
-Не дублировать одно и то же в Tailwind arbitrary values, если уже есть `adapt()` / `getJsClamp()`.
+Не подключать Tailwind, UnoCSS и прочие utility-CSS обратно. Размеры — только через `adapt()` / `getJsClamp()`.
 
 ## Структура
 

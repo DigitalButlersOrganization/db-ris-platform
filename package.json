@@ -25,14 +25,14 @@
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "3",
-		"@tailwindcss/postcss": "4.1.17",
 		"@types/node": "24.10.1",
 		"@types/react": "19.2.7",
 		"@types/react-dom": "19.2.3",
 		"eslint": "9.39.2",
 		"eslint-config-next": "16.0.7",
+		"eslint-import-resolver-typescript": "^4.4.5",
+		"eslint-plugin-boundaries": "^6.0.2",
 		"sass": "^1.101.0",
-		"tailwindcss": "4.1.17",
 		"typescript": "5.9.3",
 		"wrangler": "4.88.0"
 	},
@@ -43,7 +43,7 @@
 		"check": "npm run build && tsc",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"dev": "next dev",
-		"lint": "next lint",
+		"lint": "eslint src",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"start": "next start"
 	}

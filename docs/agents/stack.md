@@ -5,7 +5,6 @@
 - **Next.js 16** — App Router
 - **React 19**
 - **TypeScript 5.9**
-- **Tailwind CSS 4**
 - **OpenNext Cloudflare** — деплой на Cloudflare Workers
 - **ESLint** — `eslint-config-next`
 
@@ -53,6 +52,7 @@ pnpm add zustand
 
 | Библиотека | Почему |
 |------------|--------|
+| Tailwind / UnoCSS и пр. utility-CSS | Удалён: конфликтует с `@shared/ui`-обёртками. Стили — SCSS Modules + `@functions` ([styling.md](./styling.md)) |
 | Redux / MobX | TanStack Query + Zustand достаточно |
 | GraphQL / Apollo | Backend — REST (пока) |
 | react-hook-form | Mantine Form + Zod хватит для MVP |

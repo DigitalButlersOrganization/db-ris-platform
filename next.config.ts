@@ -3,6 +3,12 @@ import path from "path";
 
 const stylesDir = path.join(process.cwd(), "src/6_shared/styles");
 const functionsPath = path.join(stylesDir, "functions.scss");
+// Turbopack ждёт путь относительно корня проекта ("./…"); абсолютный путь оно
+// префиксит "." и ломает резолв. Webpack — наоборот, нужен абсолютный.
+const functionsPathRelative = `./${path
+	.relative(process.cwd(), functionsPath)
+	.split(path.sep)
+	.join("/")}`;
 
 const nextConfig: NextConfig = {
 	sassOptions: {
@@ -10,7 +16,7 @@ const nextConfig: NextConfig = {
 	},
 	turbopack: {
 		resolveAlias: {
-			"@functions": functionsPath,
+			"@functions": functionsPathRelative,
 		},
 	},
 	webpack: (config) => {

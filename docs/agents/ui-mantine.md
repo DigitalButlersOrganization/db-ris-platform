@@ -144,7 +144,7 @@ export const mantineTheme = createTheme({
 
 Theme-level defaults дублируют/дополняют defaults в `shared/ui` обёртках. Обёртки — приоритетнее для прикладного кода.
 
-CSS variables для бренда — в `src/app/globals.css` (Tailwind `@theme` + `:root` vars).
+CSS variables для бренда — в `src/app/globals.css` (`:root` vars, plain CSS).
 
 ## Providers
 
@@ -172,10 +172,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-## Mantine + Tailwind
+## Mantine + SCSS
 
 - **Mantine (через shared/ui)** — интерактивные UI-компоненты
-- **Tailwind** — layout utilities, spacing tweaks, one-off styling
+- **SCSS Modules + `@functions`** — layout, spacing, fluid-размеры (см. [styling.md](./styling.md))
+- **Tailwind не используем** — удалён, конфликтует с `@shared/ui`-обёртками
 - Не дублировать: если Mantine-компонент покрывает кейс — добавляем обёртку в `shared/ui`
 
 ## Shared UI

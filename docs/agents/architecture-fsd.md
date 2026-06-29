@@ -260,6 +260,49 @@ import { Text } from "@shared/ui";
 
 Симптомы цикла: `Cannot access 'X' before initialization`, `undefined` вместо компонента, падения, зависящие от порядка экспортов.
 
+## Линтер: enforcement границ
+
+Правила FSD не на честном слове — их проверяет **`eslint-plugin-boundaries`** (конфиг в [eslint.config.mjs](../../eslint.config.mjs)). `pnpm lint` падает при нарушении.
+
+### Что проверяется
+
+| Правило | Что ловит |
+|---------|-----------|
+| `boundaries/dependencies` | импорт «вверх» по слоям и cross-slice внутри одного слоя |
+| `no-restricted-imports` (regex `@layer/<slice>/<internal>`) | импорт мимо public API слайса |
+
+Слои описаны как `boundaries/elements` (`app`, `pages`, `widgets`, `features`, `entities`, `shared`), разрешённые зависимости — `default: "disallow"` + явные `allow` сверху вниз:
+
+```text
+app      → pages, widgets, features, entities, shared
+pages    → widgets, features, entities, shared
+widgets  → features, entities, shared
+features → entities, shared
+entities → shared
+shared   → shared
+```
+
+Relative-импорты внутри слайса (`internal` / `child` / `parent`) разрешены; `sibling` (другой слайс того же слоя) — запрещён.
+
+### Примеры ошибок линтера
+
+```ts
+// ❌ FSD violation: features cannot import features
+import { X } from "@features/other-feature";
+
+// ❌ cross-slice within the same layer is forbidden
+//    (из 5_entities/appointment в 5_entities/patients)
+import { Patient } from "@entities/patients";  // если ты внутри entities/appointment
+
+// ❌ Import via public API (@layer/<slice>), not internal files
+import { useGetPatientList } from "@entities/patients/use-get-patient-list";
+
+// ✅ через public API
+import { useGetPatientList } from "@entities/patients";
+```
+
+> Резолв алиасов для линтера — через `eslint-import-resolver-typescript` (читает `paths` из `tsconfig.json`).
+
 ## Постепенное внедрение
 
 1. Создать `6_shared/` (api, theme, ui primitives)

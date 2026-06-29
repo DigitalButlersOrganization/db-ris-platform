@@ -1,10 +1,12 @@
+@use "sass:math";
+
 @function adapt($minValue, $maxValue, $fromWidth: 480, $toWidth: 1440) {
-	$slope: ($maxValue - $minValue) / ($toWidth - $fromWidth);
+	$slope: math.div($maxValue - $minValue, $toWidth - $fromWidth);
 	$y-intercept: $minValue - $slope * $fromWidth;
 	$result: clamp(
-		#{$minValue / 16}rem,
-		#{$y-intercept / 16}rem + #{$slope * 100}vw,
-		#{$maxValue / 16}rem
+		#{math.div($minValue, 16)}rem,
+		#{math.div($y-intercept, 16)}rem + #{$slope * 100}vw,
+		#{math.div($maxValue, 16)}rem
 	);
 
 	@return $result;

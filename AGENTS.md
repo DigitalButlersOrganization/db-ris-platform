@@ -28,7 +28,7 @@
 |------|------------|
 | Framework | Next.js 16 (App Router), React 19, TypeScript |
 | Deploy | OpenNext + Cloudflare Workers |
-| Styling | Tailwind 4 + SCSS Modules + Mantine (кастомизированный) |
+| Styling | SCSS Modules (clamp-first) + Mantine (кастомизированный) |
 | Server state | TanStack Query |
 | Client UI state | Zustand (только локальное, не backend-данные) |
 | Forms | Mantine Form + Zod |
